@@ -2,12 +2,9 @@ using UnityEngine;
 
 public class CookingPot : MonoBehaviour, IInteractable
 {
-  public IInteractRequest[] GetRequestArguments()
-  {
-    return new IInteractRequest[0];
-  }
+  private IInteractRequest[] interactRequests;
 
-  public IInteractResult Interact(params IInteractRequest[] requests)
+  public IInteractResult Interact(IInteractor interactor)
   {
     return null;
   }
