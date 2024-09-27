@@ -5,9 +5,11 @@ public class Inventory
   private Dictionary<int, List<Item>> items = new Dictionary<int, List<Item>>();
   private int _currentSlot;
   private int _maxSlot;
+
   public Inventory(int maxSize)
   {
     _maxSlot = maxSize;
+    _currentSlot = 0;
   }
 
   public List<Item> GetItem(int id)
@@ -17,34 +19,34 @@ public class Inventory
 
   public int AddItem(Item itemToAdd)
   {
-    if(items.ContainsKey(itemToAdd.Id)) 
+    if (items.ContainsKey(itemToAdd.Id))
     {
-      var lastIndexItem = items[itemToAdd.Id][^1];
+      var lastItem = items[itemToAdd.Id][^1];
 
-      if(!lastIndexItem.Stackable)
+      if (!lastItem.Stackable)
       {
-        return AddItemNewSlot(itemToAdd);
+        return AddItemToNewSlot(itemToAdd);
       }
       else
       {
-        var remain = lastIndexItem.StackItem(itemToAdd.Stack);
+        var remain = lastItem.StackItem(itemToAdd.Stack);
         if (remain == 0) return 0;
-        
-        var seperatedItem = new Item(itemToAdd.Id, remain, itemToAdd.Stack);
-        return AddItemNewSlot(seperatedItem);
+
+        var separatedItem = new Item(itemToAdd.Id, remain, itemToAdd.MaxStack);
+        return AddItemToNewSlot(separatedItem);
       }
     }
     else
     {
-      return AddItemNewSlot(itemToAdd);
+      return AddItemToNewSlot(itemToAdd);
     }
   }
 
-  private int AddItemNewSlot(Item itemToAdd)
+  private int AddItemToNewSlot(Item itemToAdd)
   {
-    if (_currentSlot == _maxSlot) return itemToAdd.Stack;
+    if (!CanAddNewItem()) return itemToAdd.Stack;
 
-    if(items.ContainsKey(itemToAdd.Id)) 
+    if (items.ContainsKey(itemToAdd.Id))
     {
       items[itemToAdd.Id].Add(itemToAdd);
     }
@@ -59,35 +61,40 @@ public class Inventory
 
   public bool RemoveItem(int id, int amount)
   {
-    if(!items.ContainsKey(id) || amount < 0) return false;
+    if (!items.ContainsKey(id) || amount <= 0) return false;
 
-    var item = items[id][^1];
-    if(item.Stack >= amount)
-    {
-      item.UnstackItem(amount);
-      return true;
-    }
-    else
-    {
-      var temp = new List<Item>(items[id]);
+    int remainingAmount = amount;
 
-      var remain = amount;
-      do
+    while (remainingAmount > 0 && items[id].Count > 0)
+    {
+      var item = items[id][^1];
+
+      if (item.Stack >= remainingAmount)
       {
-        var diff = remain - item.Stack;
-        remain = item.UnstackItem(diff);
-        items[id].RemoveAt(items[id].Count - 1);
-        if (items[id].Count == 0)
+        item.UnstackItem(remainingAmount);
+        if (item.Stack == 0)
         {
-          items[id] = temp;
-          return false;
+          items[id].RemoveAt(items[id].Count - 1);
+          _currentSlot--;
         }
-
-        item = items[id][^1];
+        return true;
       }
-      while (remain == 0);
 
-      return true;
+      remainingAmount -= item.Stack;
+      items[id].RemoveAt(items[id].Count - 1);
+      _currentSlot--;
     }
+
+    if (items[id].Count == 0)
+    {
+      items.Remove(id);
+    }
+
+    return remainingAmount <= 0;
+  }
+
+  public bool CanAddNewItem()
+  {
+    return _currentSlot < _maxSlot;
   }
 }

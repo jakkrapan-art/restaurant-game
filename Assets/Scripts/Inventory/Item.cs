@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 public class Item
 {
   public readonly int Id;
@@ -14,15 +10,16 @@ public class Item
     Id = id;
     Stack = amount;
     MaxStack = maxStack;
-    Stackable = maxStack == 1;
+    Stackable = maxStack > 1;
   }
 
   public int StackItem(int amount)
   {
     if (!Stackable) return amount;
+
     Stack += amount;
 
-    if(Stack > MaxStack)
+    if (Stack > MaxStack)
     {
       int remain = Stack - MaxStack;
       Stack = MaxStack;
@@ -35,6 +32,7 @@ public class Item
   public int UnstackItem(int amount)
   {
     if (!Stackable) return amount;
+
     Stack -= amount;
 
     if (Stack < 0)
